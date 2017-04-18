@@ -1,7 +1,9 @@
 'use strict';
 
 let {
-    isNumber, isArray, likeArray, isString, isObject, isFunction, isBool, isPromise, isNull, isUndefined, isFalsy, isRegExp, isReadableStream, isWritableStream
+    isNumber, isArray, likeArray, isString, isObject, isFunction,
+    isBool, isPromise, isNull, isUndefined, isFalsy, isRegExp,
+    isReadableStream, isWritableStream
 } = require('basetype');
 
 let {
@@ -10,7 +12,7 @@ let {
 
 let {
     isDataObject
-} = require('./dsl');
+} = require('../dsl');
 
 /**
  * type definition {
@@ -39,6 +41,7 @@ const defaultTypeMap = {
         checker: isObject,
         getChildren: (v) => v
     },
+
     'Function': {
         checker: isFunction
     },
@@ -60,6 +63,7 @@ const defaultTypeMap = {
     'RegExp': {
         checker: isRegExp
     },
+
     'readableStream': {
         checker: isReadableStream
     },
@@ -76,7 +80,6 @@ let getTypeChecker = (dsl, typeMap = {}) => {
     if (!isDataObject(dsl)) {
         throw new Error('dsl is not data object');
     }
-    // TODO check dsl type, avoid missing type error
 
     return (data) => {
         let {
@@ -132,7 +135,7 @@ let checkPatterns = (patterns, data, types) => {
         // check children
         if (getChildren) {
             let childs = getChildren(data);
-            if (isArray(childs)) {
+            if (isArray(childs) || likeArray(childs)) {
                 for (let j = 0; j < childs.length; j++) {
                     let child = childs[j];
                     let childDsl = pattern.findChildDsl(j);

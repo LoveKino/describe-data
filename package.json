@@ -4,7 +4,8 @@
   "description": "A Simple DSL Used to Describe Data",
   "main": "index.js",
   "scripts": {
-    "test": "mocha test/function/**/*.js"
+    "test": "mocha test/function/**/*.js",
+    "cover": "istanbul cover _mocha test/function/**/*.js"
   },
   "repository": {
     "type": "git",
@@ -22,6 +23,7 @@
   },
   "homepage": "https://github.com/LoveKino/describe-data#readme",
   "devDependencies": {
+    "istanbul": "^0.4.5",
     "mocha": "^3.2.0"
   },
   "dependencies": {

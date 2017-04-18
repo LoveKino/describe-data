@@ -80,4 +80,34 @@ describe('index', () => {
             done();
         }
     });
+
+    it('array', (done) => {
+        let dsl = d('list', p('Array',
+            d('0', p('Number')),
+            d('*', p('String'))
+        ));
+
+        let typeCheck = getTypeChecker(dsl);
+
+        typeCheck([10, 'abc']);
+
+        try {
+            typeCheck(['cdf']);
+        } catch (err) {
+            assert(err.toString().indexOf('type checking fail') !== -1, true);
+        }
+
+        try {
+            typeCheck([10, 11]);
+        } catch (err) {
+            assert(err.toString().indexOf('type checking fail') !== -1, true);
+        }
+
+        try {
+            typeCheck({});
+        } catch (err) {
+            assert(err.toString().indexOf('type checking fail') !== -1, true);
+            done();
+        }
+    });
 });

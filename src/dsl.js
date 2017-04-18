@@ -21,18 +21,6 @@ let {
  */
 
 /**
- * name grammer
- *
- * *: for all child structure
- *
- * type will decide structures of childs
- */
-
-/**
- * TODO type dsl
- */
-
-/**
  * a data can have one or more formats
  *
  * d('details', 'all the detail of project')
