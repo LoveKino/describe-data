@@ -129,13 +129,6 @@ let splitNameAndAlias = (name) => {
  *   p('Object', d('*', 'String')),
  *   p('Null')
  * )
- *
- * describe an function
- *
- * d('callback', p('Function',
- *    d('params', p('Array', d('0:filter'), d('1:listen')), p('Array', d('1:listen'))),
- *    d('return', p('Object'), p('Undefined'))
- * ))
  */
 
 module.exports = {

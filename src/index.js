@@ -3,7 +3,8 @@
 let {
     d,
     p,
-    data, pattern
+    data,
+    pattern
 } = require('./dsl');
 
 let {
@@ -11,5 +12,9 @@ let {
 } = require('./type');
 
 module.exports = {
-    d, p, data, pattern, getTypeChecker
+    d,
+    p,
+    data, pattern,
+
+    getTypeChecker
 };
