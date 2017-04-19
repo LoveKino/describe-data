@@ -110,4 +110,21 @@ describe('index', () => {
             done();
         }
     });
+
+    it('match by order', () => {
+        let dsl = d('list',
+            p('Array',
+                d('*', p('String'))
+            ),
+            p('Object',
+                d('name', p('String'))
+            ));
+
+        let typeCheck = getTypeChecker(dsl);
+
+        typeCheck(['1', '2']);
+        typeCheck({
+            name: 'ok'
+        });
+    });
 });

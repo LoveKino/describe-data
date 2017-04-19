@@ -1,80 +1,23 @@
 'use strict';
 
 let {
-    isNumber, isArray, likeArray, isString, isObject, isFunction,
-    isBool, isPromise, isNull, isUndefined, isFalsy, isRegExp,
-    isReadableStream, isWritableStream
-} = require('basetype');
-
-let {
-    mergeMap
+    mergeMap, any, find
 } = require('bolzano');
 
 let {
     isDataObject
 } = require('../dsl');
 
-/**
- * type definition {
- *   checker,
- *   getChildren [optional], // return an array or map (key: child)
- *   mock [optional]
- * }
- */
+let defaultTypeMap = require('./defaultTypeMap');
 
-const defaultTypeMap = {
-    'Number': {
-        checker: isNumber
-    },
-    'Array': {
-        checker: isArray,
-        getChildren: (v) => v
-    },
-    'ArrayLike': {
-        checker: likeArray,
-        getChildren: (v) => v
-    },
-    'String': {
-        checker: isString
-    },
-    'Object': {
-        checker: isObject,
-        getChildren: (v) => v
-    },
+let nextsToFindChildDSL = require('./nextsToFindChildDSL');
 
-    'Function': {
-        checker: isFunction
-    },
-    'Boolean': {
-        checker: isBool
-    },
-    'Promise': {
-        checker: isPromise
-    },
-    'Null': {
-        checker: isNull
-    },
-    'Undefined': {
-        checker: isUndefined
-    },
-    'Falsy': {
-        checker: isFalsy
-    },
-    'RegExp': {
-        checker: isRegExp
-    },
-
-    'readableStream': {
-        checker: isReadableStream
-    },
-    'writableStream': {
-        checker: isWritableStream
-    }
-};
+let checkDSLTypeDefinition = require('./checkDSLTypeDefinition');
 
 // generate a type check according to data dsl
 let getTypeChecker = (dsl, typeMap = {}) => {
     let types = mergeMap(typeMap, defaultTypeMap);
+    // check type definition first, avoid missing type error
     checkDSLTypeDefinition(dsl, types);
 
     if (!isDataObject(dsl)) {
@@ -82,103 +25,58 @@ let getTypeChecker = (dsl, typeMap = {}) => {
     }
 
     return (data) => {
-        let {
-            patterns
-        } = dsl;
+        let matchedPattern = testPatterns(dsl, data, {
+            types
+        });
+        if (!matchedPattern) {
+            throw new Error('type checking fail, fail to find pattern to match data');
+        }
 
-        checkPatterns(patterns, data, types);
+        return matchedPattern;
     };
 };
 
-let checkDSLTypeDefinition = (dsl, types) => {
+let testPatterns = (dsl, data, {
+    types, path = []
+}) => {
     let {
         patterns
     } = dsl;
-
-    for (let i = 0; i < patterns.length; i++) {
-        let {
-            type, nexts
-        } = patterns[i];
-
-        if (!types[type]) {
-            throw new Error(`missing type definition of ${type}`);
-        }
-
-        for (let i = 0; i < nexts.length; i++) {
-            checkDSLTypeDefinition(nexts[i], types);
-        }
-    }
-};
-
-let checkPatterns = (patterns, data, types) => {
     if (!patterns.length) return true;
 
-    // data just need to satisfy one pattern
-    for (let i = 0; i < patterns.length; i++) {
-        let pattern = patterns[i];
+    return find(patterns, (pattern) => {
         let {
             type, nexts
         } = pattern;
-
-        if (!pattern.findChildDsl) {
-            pattern.findChildDsl = nextsToFindChildDsl(nexts);
+        if (!pattern.findChildDSL) {
+            pattern.findChildDSL = nextsToFindChildDSL(nexts);
         }
-
         let {
             checker, getChildren
         } = types[type];
 
-        if (!checker(data)) {
-            throw new Error(`type checking fail. Expect type is ${type}, data is ${data}.`);
-        }
+        if (!checker(data)) return false;
+
+        if (!getChildren) return true;
 
         // check children
-        if (getChildren) {
-            let childs = getChildren(data);
-            if (isArray(childs) || likeArray(childs)) {
-                for (let j = 0; j < childs.length; j++) {
-                    let child = childs[j];
-                    let childDsl = pattern.findChildDsl(j);
-                    if (childDsl) {
-                        checkPatterns(childDsl.patterns, child, types);
-                    }
-                }
-            } else if (isObject(childs)) {
-                for (let name in childs) {
-                    let child = childs[name];
-                    let childDsl = pattern.findChildDsl(name);
-                    if (childDsl) {
-                        checkPatterns(childDsl.patterns, child, types);
-                    }
-                }
+        let childs = getChildren(data); // for structured type, through getChildren method to go through next datas
+
+        // if no data, any will return true
+        return any(childs, (child, index) => {
+            let childDsl = pattern.findChildDSL(index);
+            if (childDsl) {
+                return testPatterns(childDsl, child, {
+                    types, path: path.concat([index])
+                });
+            } else { // do not find any child DSL filtered by name
+                return true;
             }
-        }
-    }
-};
-
-/**
- * build map from nexts by name
- */
-let nextsToFindChildDsl = (nexts) => {
-    let map = {},
-        fullPattern = null;
-
-    for (let i = 0; i < nexts.length; i++) {
-        let next = nexts[i];
-        if (next.name === '*') {
-            fullPattern = next;
-        } else {
-            map[next.name] = next;
-        }
-    }
-
-    return (name) => {
-        let high = map[name];
-        if (high) return high;
-        if (fullPattern) return fullPattern;
-    };
+        });
+    });
 };
 
 module.exports = {
-    getTypeChecker
+    getTypeChecker,
+    testPatterns
 };

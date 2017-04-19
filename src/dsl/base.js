@@ -5,19 +5,12 @@ let {
 } = require('basetype');
 
 /**
- * define a simple dsl used to describe data
- *
- * data's factors
- *
- * - name
- *
- * - type
- *
- * - description
- *
- * - structure
- *
- * - examples
+ * In data DSL definition, a data DSL can have multiple patterns, but for one data, there should be only one pattern for it.
+ */
+
+/**
+ * data = {name, alias, patterns}
+ * pattern = {type, nexts}
  */
 
 /**
@@ -40,18 +33,23 @@ let d = (...args) => {
         name = args[0];
     } else if (args.length === 2) {
         name = args[0];
-        patterns = [args[1]];
+        if (isString(args[1])) {
+            detail = args[1];
+        } else {
+            patterns = [args[1]];
+        }
     } else {
         name = args[0];
-        detail = args[1];
-        patterns = args.slice(2);
+        if (isString(args[1])) {
+            detail = args[1];
+            patterns = args.slice(2);
+        } else {
+            patterns = args.slice(1);
+        }
     }
     // check parameters
     if (!isString(name)) {
         throw new Error(`name is not string but ${name} in data definition.\n${EXAMPLE_FOR_D}`);
-    }
-    if (!isString(detail)) {
-        throw new Error(`detail is not string but ${detail} in data definition.\n${EXAMPLE_FOR_D}`);
     }
     for (let i = 0; i < patterns.length; i++) {
         let pattern = patterns[i];

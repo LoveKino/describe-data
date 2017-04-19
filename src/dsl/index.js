@@ -10,7 +10,7 @@ let {
 } = require('./base');
 
 let {
-    f, arg, ret, fun
+    f, arg, fun, getParamsDSL, getReturnDSL
 } = require('./fun');
 
 module.exports = {
@@ -22,6 +22,7 @@ module.exports = {
     pattern,
     f,
     arg,
-    ret,
-    fun
+    fun,
+    getParamsDSL,
+    getReturnDSL
 };
